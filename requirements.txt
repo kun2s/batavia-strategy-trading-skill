@@ -1,0 +1,4 @@
+# Batavia has no runtime dependencies — the skill, generator, and backtester are
+# pure standard-library Python (EMA/RSI/ATR implemented inline, no numpy/pandas).
+# jsonschema is optional, only to validate generated specs against the schema.
+jsonschema>=4.0

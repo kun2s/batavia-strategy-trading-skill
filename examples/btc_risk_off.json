@@ -1,0 +1,159 @@
+{
+  "name": "batavia-regime-router",
+  "version": "0.1",
+  "as_of": "2026-06-20T00:00:00+00:00",
+  "symbol": "BTC",
+  "timeframe": "1h",
+  "direction": "long_only",
+  "regime": {
+    "label": "RISK_OFF",
+    "scores": {
+      "fear_greed": 14.0,
+      "trend_score": -0.55,
+      "vol_state": "normal",
+      "funding_stress": 0.0
+    },
+    "rationale": "Extreme fear (F&G 14) \u2014 preserve capital, do not catch a falling knife."
+  },
+  "active_strategy": {
+    "regime": "RISK_OFF",
+    "style": "cash",
+    "direction": "long_only",
+    "entry": {
+      "on": "none",
+      "rule": "hold the quote/stable asset; re-enter only when the regime changes",
+      "side": "flat"
+    },
+    "exit": {
+      "stop_loss_pct": 0.015,
+      "take_profit_pct": 0.0,
+      "max_hold_hours": 0,
+      "note": "close risk and sit in cash"
+    },
+    "sizing": {
+      "method": "fixed_fraction",
+      "base_risk": 0.0,
+      "max_position_fraction": 0.0
+    }
+  },
+  "regime_playbook": {
+    "TRENDING_UP": {
+      "style": "momentum",
+      "direction": "long_only",
+      "entry": {
+        "on": "trend_continuation",
+        "rule": "close > EMA20 while trend_score >= 0.5",
+        "side": "long"
+      },
+      "exit": {
+        "stop_loss_pct": 0.025,
+        "take_profit_pct": 0.08,
+        "max_hold_hours": 72,
+        "trail": {
+          "activate_at_pct": 0.04,
+          "trail_pct": 0.03
+        },
+        "on": [
+          "trend_flip_down"
+        ]
+      },
+      "sizing": {
+        "method": "volatility_target",
+        "base_risk": 0.02,
+        "reference_atr_pct": 0.02,
+        "min_risk": 0.005,
+        "max_risk": 0.04,
+        "max_position_fraction": 0.34
+      }
+    },
+    "RANGING": {
+      "style": "mean_reversion",
+      "direction": "long_only",
+      "entry": {
+        "on": "oversold_reversion",
+        "rule": "RSI(14) < 30 and close <= lower_bollinger(20, 2)",
+        "side": "long"
+      },
+      "exit": {
+        "stop_loss_pct": 0.02,
+        "take_profit_pct": 0.03,
+        "max_hold_hours": 24,
+        "on": [
+          "RSI(14) > 55"
+        ]
+      },
+      "sizing": {
+        "method": "fixed_fraction",
+        "base_risk": 0.015,
+        "max_position_fraction": 0.25
+      }
+    },
+    "EUPHORIA": {
+      "style": "defensive_no_new_risk",
+      "direction": "long_only",
+      "entry": {
+        "on": "none",
+        "rule": "no new longs into extreme greed + hot funding",
+        "side": "flat"
+      },
+      "exit": {
+        "stop_loss_pct": 0.02,
+        "take_profit_pct": 0.04,
+        "max_hold_hours": 12,
+        "note": "manage/trim existing positions only; tighten stops"
+      },
+      "sizing": {
+        "method": "fixed_fraction",
+        "base_risk": 0.0,
+        "max_position_fraction": 0.0
+      }
+    },
+    "RISK_OFF": {
+      "style": "cash",
+      "direction": "long_only",
+      "entry": {
+        "on": "none",
+        "rule": "hold the quote/stable asset; re-enter only when the regime changes",
+        "side": "flat"
+      },
+      "exit": {
+        "stop_loss_pct": 0.015,
+        "take_profit_pct": 0.0,
+        "max_hold_hours": 0,
+        "note": "close risk and sit in cash"
+      },
+      "sizing": {
+        "method": "fixed_fraction",
+        "base_risk": 0.0,
+        "max_position_fraction": 0.0
+      }
+    }
+  },
+  "risk": {
+    "drawdown_derisk_start": 0.12,
+    "drawdown_halt": 0.2,
+    "drawdown_resume": 0.14,
+    "max_concurrent": 3,
+    "min_trades_per_day": 1,
+    "note": "Halt at 20% DD = a 10-point buffer below a ~30% gate. The router's RISK_OFF/EUPHORIA seasons are the first line of drawdown defense."
+  },
+  "costs": {
+    "fee_per_side_pct": 0.05
+  },
+  "data_inputs": [
+    "get_crypto_quotes_latest",
+    "get_crypto_technical_analysis",
+    "get_global_crypto_derivatives_metrics",
+    "get_fear_and_greed_latest"
+  ],
+  "validation": {
+    "method": "Walk-forward, regime-segmented. Compare the router against three static baselines (always-momentum, always-mean-reversion, buy-and-hold) on the same out-of-sample window. Primary metric: portfolio max drawdown (the gate). Secondary: total return and per-regime expectancy.",
+    "hypothesis": "Switching beats any single static signal: momentum gets chopped up in ranging seasons and caught in blow-off tops, while mean-reversion is run over by strong trends. Standing flat in RISK_OFF/EUPHORIA is the single largest drawdown saver.",
+    "baselines": [
+      "always_momentum",
+      "always_mean_reversion",
+      "buy_and_hold"
+    ],
+    "status": "Framework + runnable harness shipped (backtest/regime_router.py). Run it on your own OHLCV to populate empirical numbers \u2014 this spec ships NO fabricated results."
+  }
+}

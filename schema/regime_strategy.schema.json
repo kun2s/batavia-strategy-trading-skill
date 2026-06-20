@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Batavia regime-aware strategy spec",
+  "description": "A backtestable spec whose active rules adapt to a detected market regime. Engine-agnostic.",
+  "type": "object",
+  "required": ["name", "symbol", "timeframe", "regime", "active_strategy", "regime_playbook", "risk", "costs"],
+  "properties": {
+    "name": {"type": "string", "const": "batavia-regime-router"},
+    "version": {"type": "string"},
+    "as_of": {"type": ["string", "null"], "description": "ISO timestamp the regime was assessed"},
+    "symbol": {"type": "string", "description": "Token symbol, e.g. ETH"},
+    "timeframe": {"type": "string", "examples": ["1h"]},
+    "direction": {"type": "string", "enum": ["long_only", "long_short"]},
+
+    "regime": {
+      "type": "object",
+      "required": ["label", "scores", "rationale"],
+      "properties": {
+        "label": {"type": "string", "enum": ["TRENDING_UP", "RANGING", "EUPHORIA", "RISK_OFF"]},
+        "scores": {
+          "type": "object",
+          "properties": {
+            "fear_greed": {"type": "number", "minimum": 0, "maximum": 100},
+            "trend_score": {"type": "number", "minimum": -1, "maximum": 1},
+            "vol_state": {"type": "string", "enum": ["low", "normal", "high"]},
+            "funding_stress": {"type": "number", "minimum": -1, "maximum": 1}
+          }
+        },
+        "rationale": {"type": "string", "description": "Plain-language why for this regime"}
+      }
+    },
+
+    "active_strategy": {"$ref": "#/$defs/substrategy"},
+    "regime_playbook": {
+      "type": "object",
+      "description": "The full season -> sub-strategy map; the active one is also surfaced at active_strategy.",
+      "required": ["TRENDING_UP", "RANGING", "EUPHORIA", "RISK_OFF"],
+      "additionalProperties": {"$ref": "#/$defs/substrategy"}
+    },
+
+    "risk": {
+      "type": "object",
+      "description": "Portfolio-level guardrails (regime-independent)",
+      "properties": {
+        "drawdown_derisk_start": {"type": "number"},
+        "drawdown_halt": {"type": "number"},
+        "drawdown_resume": {"type": "number"},
+        "max_concurrent": {"type": "integer"},
+        "min_trades_per_day": {"type": "integer"}
+      }
+    },
+    "costs": {
+      "type": "object",
+      "required": ["fee_per_side_pct"],
+      "properties": {"fee_per_side_pct": {"type": "number"}}
+    },
+    "data_inputs": {"type": "array", "items": {"type": "string"},
+      "description": "CoinMarketCap Agent Hub endpoints/tools consumed"},
+    "validation": {
+      "type": "object",
+      "description": "How this spec is to be validated (framework + honest status; no baked results)",
+      "properties": {
+        "method": {"type": "string"},
+        "hypothesis": {"type": "string"},
+        "baselines": {"type": "array", "items": {"type": "string"}},
+        "status": {"type": "string"}
+      }
+    }
+  },
+
+  "$defs": {
+    "substrategy": {
+      "type": "object",
+      "required": ["style", "entry", "exit", "sizing"],
+      "properties": {
+        "regime": {"type": "string"},
+        "style": {"type": "string", "enum": ["momentum", "mean_reversion", "defensive_no_new_risk", "cash"]},
+        "direction": {"type": "string", "enum": ["long_only", "long_short"]},
+        "entry": {
+          "type": "object",
+          "required": ["on"],
+          "properties": {
+            "on": {"type": "string", "description": "trigger; 'none' = stand aside (a valid, intended output)"},
+            "rule": {"type": "string"},
+            "side": {"type": "string", "enum": ["long", "short", "flat"]}
+          }
+        },
+        "exit": {
+          "type": "object",
+          "required": ["stop_loss_pct", "take_profit_pct", "max_hold_hours"],
+          "properties": {
+            "stop_loss_pct": {"type": "number"},
+            "take_profit_pct": {"type": "number"},
+            "max_hold_hours": {"type": "integer"},
+            "trail": {"type": "object"},
+            "on": {"type": "array", "items": {"type": "string"}},
+            "note": {"type": "string"}
+          }
+        },
+        "sizing": {
+          "type": "object",
+          "required": ["method"],
+          "properties": {
+            "method": {"type": "string", "enum": ["volatility_target", "fixed_fraction"]},
+            "base_risk": {"type": "number"},
+            "reference_atr_pct": {"type": "number"},
+            "min_risk": {"type": "number"},
+            "max_risk": {"type": "number"},
+            "max_position_fraction": {"type": "number"}
+          }
+        }
+      }
+    }
+  }
+}
