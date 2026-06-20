@@ -41,7 +41,9 @@ to stand aside.
 | `backtest/regime_router.py` | Runnable validation harness (`--selftest`, `--compare`) |
 | `backtest/fetch_data.py` | Pull real free data (Binance klines + F&G + funding) |
 | `docs/METHODOLOGY.md` | Regime taxonomy, thresholds, validation design |
-| `docs/RESULTS.md` | Real-data backtest + a rejected refinement (honest writeup) |
+| `backtest/validate_basket.py` | Multi-asset robustness test (router vs baselines) |
+| `docs/RESULTS.md` | Real-data backtest + basket + a rejected refinement |
+| `SUBMISSION.md` | The DoraHacks Track 2 writeup |
 
 ## Quickstart
 

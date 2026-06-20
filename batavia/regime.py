@@ -207,10 +207,10 @@ VALIDATION_FRAMEWORK = {
                    "mean-reversion is run over by strong trends. Standing flat in "
                    "RISK_OFF/EUPHORIA is the single largest drawdown saver."),
     "baselines": ["always_momentum", "always_mean_reversion", "buy_and_hold"],
-    "status": ("Validated on real data (docs/RESULTS.md): ETH 1h, 3000 bars "
-               "Feb-Jun 2026. In a -12.5% buy-hold window the router lost only "
-               "-4.6% (maxDD 4.6%) — but a regime-blind momentum baseline beat it "
-               "on return that window. Edge is drawdown-adjusted robustness, not "
-               "single-window return; multi-asset validation is the next step. "
-               "No fabricated numbers — reproduce via backtest/fetch_data.py."),
+    "status": ("Validated on real data across a 7-asset basket (docs/RESULTS.md): "
+               "BTC/ETH/BNB/SOL/AVAX/LINK/DOGE, 1h, 3000 bars, Feb-Jun 2026. Router "
+               "mean maxDD 3.7% vs momentum 6.7% (~half), beat buy-hold on return "
+               "7/7. Honest cost: momentum out-returns in cleanly trending assets. "
+               "Edge is drawdown-robustness, not single-window return. No fabricated "
+               "numbers — reproduce via backtest/validate_basket.py."),
 }
