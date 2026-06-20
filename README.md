@@ -38,8 +38,10 @@ to stand aside.
 | `generate_spec.py` | CLI: signals in → schema-valid strategy spec out |
 | `schema/regime_strategy.schema.json` | JSON Schema for the spec (engine-agnostic) |
 | `examples/` | Ready-made example specs (trending, risk-off) |
-| `backtest/regime_router.py` | Runnable validation harness (`--selftest` or `--csv`) |
+| `backtest/regime_router.py` | Runnable validation harness (`--selftest`, `--compare`) |
+| `backtest/fetch_data.py` | Pull real free data (Binance klines + F&G + funding) |
 | `docs/METHODOLOGY.md` | Regime taxonomy, thresholds, validation design |
+| `docs/RESULTS.md` | Real-data backtest + a rejected refinement (honest writeup) |
 
 ## Quickstart
 
@@ -55,8 +57,13 @@ python backtest/regime_router.py --selftest
 
 The self-test builds four synthetic seasons, asserts the classifier labels each
 correctly, then shows the router sidestepping a crash that buy-and-hold eats —
-the mechanical proof of the drawdown-first thesis. **It ships no fabricated
-performance numbers**; cite results only from running the harness on real data.
+the mechanical proof of the drawdown-first thesis.
+
+For **real** evidence, [`docs/RESULTS.md`](docs/RESULTS.md) reports a 3000-bar ETH
+backtest: in a −12.5% buy-and-hold window the router lost only −4.6% (maxDD 4.6%),
+though a regime-blind momentum baseline beat it on return that window. We publish
+the unflattering window — and a refinement we tried and **rejected** on the data —
+on purpose. **No fabricated numbers**; everything reproduces from `fetch_data.py`.
 
 ## Honesty notes
 

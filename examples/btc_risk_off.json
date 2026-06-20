@@ -154,6 +154,6 @@
       "always_mean_reversion",
       "buy_and_hold"
     ],
-    "status": "Framework + runnable harness shipped (backtest/regime_router.py). Run it on your own OHLCV to populate empirical numbers \u2014 this spec ships NO fabricated results."
+    "status": "Validated on real data (docs/RESULTS.md): ETH 1h, 3000 bars Feb-Jun 2026. In a -12.5% buy-hold window the router lost only -4.6% (maxDD 4.6%) \u2014 but a regime-blind momentum baseline beat it on return that window. Edge is drawdown-adjusted robustness, not single-window return; multi-asset validation is the next step. No fabricated numbers \u2014 reproduce via backtest/fetch_data.py."
   }
 }

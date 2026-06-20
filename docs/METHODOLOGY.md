@@ -84,6 +84,9 @@ the governor is the backstop.
   system misses; and stepping flat in RISK_OFF/EUPHORIA is the largest single
   contributor to that drawdown reduction.
 
+Real-data findings (ETH, 3000 1h bars) and a rejected refinement live in
+[RESULTS.md](RESULTS.md).
+
 ### What the self-test shows (and doesn't)
 
 `--selftest` runs on **synthetic** seasons. It proves the *mechanics*: the

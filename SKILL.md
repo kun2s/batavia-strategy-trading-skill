@@ -65,11 +65,13 @@ python backtest/regime_router.py --csv your_1h.csv --context your_ctx.csv
 ```
 
 `--selftest` builds four synthetic seasons and asserts the classifier labels each
-correctly, then runs the router against buy-and-hold — demonstrating that
-stepping out in EUPHORIA/RISK_OFF is what protects the drawdown. The performance
-numbers you cite must come from running this on real data. See
-[docs/METHODOLOGY.md](docs/METHODOLOGY.md) for the regime taxonomy, thresholds,
-and the validation design (router vs three static baselines).
+correctly. `--compare` runs the router against three static baselines on real
+OHLCV. Real-data findings are in **[docs/RESULTS.md](docs/RESULTS.md)** (ETH, 3000
+1h bars): in a −12.5% buy-and-hold window the router lost only −4.6% — though a
+regime-blind momentum baseline beat it on return that window. We publish the
+window that does *not* flatter the strategy, plus a refinement we **tried and
+rejected** on the data. See [docs/METHODOLOGY.md](docs/METHODOLOGY.md) for the
+regime taxonomy, thresholds, and validation design.
 
 ## Limitations
 

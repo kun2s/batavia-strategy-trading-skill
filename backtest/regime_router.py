@@ -37,9 +37,13 @@ def _signals_at(highs, lows, closes, fg, funding):
     return Signals(fear_greed=fg, trend_score=ts, vol_state=vs, funding_stress=funding)
 
 
-def run(highs, lows, closes, fgs, fundings, verbose=False):
-    """Walk bar by bar; switch sub-strategy by regime; long-only, one position.
+def run(highs, lows, closes, fgs, fundings, mode="router"):
+    """Walk bar by bar; long-only, one position. `mode` selects the policy:
+      'router'         -> switch sub-strategy by detected regime (Batavia)
+      'momentum'       -> baseline: always momentum, regime-blind
+      'mean_reversion' -> baseline: always mean-reversion, regime-blind
     Returns a metrics dict."""
+    forced = {"momentum": TRENDING_UP, "mean_reversion": RANGING}.get(mode)
     equity = 1.0
     peak = 1.0
     max_dd = 0.0
@@ -52,6 +56,7 @@ def run(highs, lows, closes, fgs, fundings, verbose=False):
         sig = _signals_at(h, l, c, fgs[i], fundings[i])
         label, _, _ = classify(sig)
         regime_hist[label] += 1
+        active = label if forced is None else forced   # policy-selected sub-strategy
         price = closes[i]
 
         # ── manage an open position ──
@@ -64,7 +69,7 @@ def run(highs, lows, closes, fgs, fundings, verbose=False):
                 hit, fill = "TP", pos["tp"]
             elif (i - pos["t_open"]) >= cfg["max_hold_hours"]:
                 hit, fill = "timeout", price
-            elif label in (RISK_OFF, EUPHORIA) and pos["regime"] != label:
+            elif forced is None and label in (RISK_OFF, EUPHORIA) and pos["regime"] != label:
                 hit, fill = "regime_exit", price   # season turned hostile -> step out
             if hit:
                 ret = (fill - pos["entry"]) / pos["entry"]
@@ -75,13 +80,13 @@ def run(highs, lows, closes, fgs, fundings, verbose=False):
 
         # ── consider an entry (only when flat) ──
         if not pos:
-            sub = PLAYBOOK[label]
+            sub = PLAYBOOK[active]
             entry_on = sub["entry"]["on"]
             enter = False
-            if label == TRENDING_UP:
+            if active == TRENDING_UP:
                 ef = ema(c, 20)
                 enter = ef[-1] is not None and price > ef[-1]
-            elif label == RANGING:
+            elif active == RANGING:
                 r = rsi(c, 14)
                 enter = r[-1] is not None and r[-1] < 30
             # EUPHORIA / RISK_OFF: entry_on == "none" -> never enter (the point)
@@ -166,6 +171,29 @@ def selftest():
     return 0 if ok else 1
 
 
+def compare(highs, lows, closes, fgs, fundings):
+    """Router vs the three static baselines on the same data. Primary lens = maxDD
+    (the gate); secondary = return."""
+    policies = [("Batavia router", "router"),
+                ("always-momentum", "momentum"),
+                ("always-mean-rev", "mean_reversion")]
+    rows = [(name, run(highs, lows, closes, fgs, fundings, mode=m)) for name, m in policies]
+    bh = rows[0][1]["buy_hold_return_pct"]
+
+    print(f"{'policy':<18}{'return':>10}{'maxDD':>9}{'trades':>8}{'win%':>7}")
+    print("-" * 52)
+    for name, m in rows:
+        print(f"{name:<18}{m['total_return_pct']:>9.2f}%{m['max_drawdown_pct']:>8.2f}%"
+              f"{m['trades']:>8}{m['win_rate_pct']:>7}")
+    print(f"{'buy & hold':<18}{bh:>9.2f}%{'—':>8}{'—':>8}{'—':>7}")
+    rh = rows[0][1]["regime_bars"]
+    tot = sum(rh.values()) or 1
+    print("\nregime mix (router): " +
+          "  ".join(f"{k}={v} ({100*v//tot}%)" for k, v in rh.items()))
+    print(f"router exits: {rows[0][1]['exits']}")
+    return rows
+
+
 def _load(path, cols):
     rows = []
     with open(path, newline="") as f:
@@ -179,6 +207,8 @@ def main():
     ap.add_argument("--selftest", action="store_true", help="run synthetic-season checks")
     ap.add_argument("--csv", help="OHLCV csv (high,low,close)")
     ap.add_argument("--context", help="optional per-bar csv (fear_greed,funding)")
+    ap.add_argument("--compare", action="store_true",
+                    help="router vs static baselines table (use with --csv)")
     args = ap.parse_args()
 
     if args.selftest or not args.csv:
@@ -192,9 +222,13 @@ def main():
     else:
         fgs = [50.0] * len(closes); fundings = [0.0] * len(closes)
         print("WARN: no --context; fear_greed=50/funding=0 -> EUPHORIA/RISK_OFF(by fear) "
-              "cannot trigger. Supply a context csv for full regime coverage.")
-    import json
-    print(json.dumps(run(highs, lows, closes, fgs, fundings), indent=2))
+              "cannot trigger. Supply a context csv for full regime coverage.\n")
+
+    if args.compare:
+        compare(highs, lows, closes, fgs, fundings)
+    else:
+        import json
+        print(json.dumps(run(highs, lows, closes, fgs, fundings), indent=2))
 
 
 if __name__ == "__main__":
