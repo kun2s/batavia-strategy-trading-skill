@@ -1,82 +1,95 @@
 ---
-name: batavia-regime-skill
+name: batavia-regime-compiler
 description: >
-  Detect the current market "season" (regime) from CoinMarketCap data and emit a
-  backtestable trading-strategy spec tuned to that season — including the seasons
-  where the right move is to hold cash. Use when the user wants a regime-aware
-  quant strategy spec (which signal, when to switch, when to stand aside),
-  grounded in a drawdown-first design — not a live trade. Produces a JSON spec a
-  backtester can run, plus a runnable validation harness.
+  Compile CoinMarketCap technical, sentiment, volatility, and derivatives
+  evidence into an auditable, backtestable strategy receipt. Use when a user
+  asks whether a crypto setup has enough current evidence to authorize a
+  long-only momentum strategy, stand aside, or abstain because data is stale or
+  incomplete. This skill performs research only and never executes a trade.
 ---
 
-# Batavia — CMC market data → regime-aware, backtestable strategy spec
+# Batavia CMC strategy compiler
 
-**Track 2** deliverable for the BNB Hack (CoinMarketCap track). Batavia is a CMC
-Skill that turns market data into a *backtestable strategy spec*, not a live
-agent. Its distinguishing idea: **markets move through seasons, and no single
-signal is right in all of them.** So instead of shipping one strategy, Batavia
-detects the regime and emits the strategy that season calls for — and in two of
-the four seasons, that strategy is *do nothing*.
+Batavia converts live CoinMarketCap evidence into a deterministic JSON strategy
+receipt. Do not improvise missing values and do not substitute another market
+data provider.
 
-## The four seasons
+## Workflow
 
-| Regime | Detected when | Strategy it emits |
-|---|---|---|
-| **TRENDING_UP** | clear uptrend, no euphoric froth | momentum: ride with a trailing exit |
-| **RANGING** | no dominant trend, calm sentiment | mean-reversion: fade oversold extremes |
-| **EUPHORIA** | extreme greed **+** crowded long funding | defensive: **no new longs**, trim/tighten |
-| **RISK_OFF** | extreme fear, or a downtrend (spot/long-only) | **cash**: stand aside |
+1. Resolve the requested asset with `search_cryptos`. Retain its numeric CMC ID;
+   never rely on symbol alone after resolution.
+2. Call `get_crypto_quotes_latest` for the resolved ID.
+3. Call `get_crypto_technical_analysis` for EMA/RSI/MACD context.
+4. Call `get_global_metrics_latest` for global conditions and Fear & Greed.
+5. Call `get_global_crypto_derivatives_metrics` for funding, open interest, and
+   leverage context. Funding is optional; never replace an unavailable value
+   with invented data.
+6. Record each tool name and observation timestamp.
+7. Normalize evidence:
+   - `trend_score`: EMA20/EMA50 spread mapped to `[-1, 1]`;
+   - `vol_state`: `low`, `normal`, or `high` from hourly ATR percentage;
+   - `fear_greed`: CMC value in `[0, 100]`;
+   - `funding_stress`: normalized funding in `[-1, 1]`, or `null`.
+8. Compile the receipt with `generate_spec.py` or `batavia.regime.build_spec`.
+9. Validate it against `schema/regime_strategy.schema.json`.
+10. Present the decision status, regime, rationale, invalidation conditions,
+    evidence freshness, and rejected alternatives. Never present the receipt as
+    financial advice or execution confirmation.
 
-The thesis: in a live-PnL competition the metric that decides everything is
-**drawdown** ("most profit without blowing up"). The single largest drawdown
-saver is refusing to trade in the wrong season — so Batavia's most important
-output is often `entry.on: "none"`. A strategy skill that knows *when not to
-trade* is rarer than one that always has an opinion.
+## Agent Hub special-prize contract
 
-## How an agent uses it
+Batavia is intentionally shaped as an Agent Hub-native Skill:
 
-1. Read CMC context for the token:
-   - `get_crypto_quotes_latest` → 1h candles → **trend_score**, **vol_state**
-   - `get_crypto_technical_analysis` → RSI/MACD/EMA (corroborates trend/vol)
-   - `get_global_crypto_derivatives_metrics` → funding/OI → **funding_stress**
-   - `get_fear_and_greed_latest` → **fear_greed**
-2. Classify the regime and emit a `strategy_spec` (see
-   `schema/regime_strategy.schema.json`).
-3. Hand the spec to any backtester — it is engine-agnostic; field meanings live
-   in the schema.
+- The live path is MCP-first: CMC identity, quotes, technicals, global metrics,
+  Fear & Greed, and derivatives context are collected through Agent Hub tools.
+- The output records an `agent_hub` block naming the Skill surface, MCP surface,
+  replay surface, required CMC tools, optional research tools, and x402 policy.
+- The receipt hash includes the Agent Hub contract, source tool names, source
+  timestamps, normalized signals, CMC ID, and confirmation count.
+- Offline demos and CLI replay never replace CMC evidence; they only prove the
+  deterministic compiler and schema contract without exposing an API key.
+- x402 is treated as an Agent Hub access path for live CMC tool calls, not a
+  fake trading-payment feature. If x402 is enabled by the runtime, the same
+  receipt schema remains valid.
 
-```bash
-# from CMC-derived signals (pass what the tools returned)
-python generate_spec.py ETH --fear-greed 72 --trend 0.7 --funding 0.2
+## Decision rules
 
-# or derive trend/vol straight from a 1h OHLCV csv
-python generate_spec.py ETH --csv data/eth_1h.csv --fear-greed 35
-```
+Priority order:
 
-Ready-made examples: `examples/eth_trending.json`, `examples/btc_risk_off.json`.
+1. F&G at or below 20 -> immediate `RISK_OFF`.
+2. F&G at or above 80 plus funding stress at or above 0.5 -> immediate `EUPHORIA`.
+3. Trend score at or above 0.5 for three hourly bars -> `TRENDING_UP`.
+4. Trend score at or below -0.5 for three hourly bars -> `RISK_OFF`.
+5. Otherwise -> `RANGING`.
 
-## Validation — framework, not fabricated numbers
+Only confirmed `TRENDING_UP` may produce `ACTIVE`. All other complete evidence
+produces `STAND_ASIDE`. Required evidence older than two hours, or missing Fear &
+Greed/trend/volatility, produces `INSUFFICIENT_DATA`.
 
-Batavia ships a **runnable** harness, not pre-baked results:
+## Active strategy
 
-```bash
-python backtest/regime_router.py --selftest          # verify the router mechanics
-python backtest/regime_router.py --csv your_1h.csv --context your_ctx.csv
-```
+- Entry signal: fresh close cross above EMA20 on a closed hourly bar.
+- Execution assumption: next hourly bar open.
+- Stop: 2.5%; target: 8%; maximum hold: 72 hours.
+- Invalidation: confirmed regime stops being `TRENDING_UP`.
+- Position fraction: ATR-targeted, bounded to 5%-25%.
+- Costs: 0.05% per side.
 
-`--selftest` builds four synthetic seasons and asserts the classifier labels each
-correctly. `--compare` runs the router against three static baselines on real
-OHLCV. Real-data findings are in **[docs/RESULTS.md](docs/RESULTS.md)** (ETH, 3000
-1h bars): in a −12.5% buy-and-hold window the router lost only −4.6% — though a
-regime-blind momentum baseline beat it on return that window. We publish the
-window that does *not* flatter the strategy, plus a refinement we **tried and
-rejected** on the data. See [docs/METHODOLOGY.md](docs/METHODOLOGY.md) for the
-regime taxonomy, thresholds, and validation design.
+`RANGING`, `EUPHORIA`, and `RISK_OFF` allocate zero. Mean reversion is retained
+only as a validation baseline, not silently activated by the Skill.
 
-## Limitations
+## Failure behavior
 
-Long-only, spot (the eligible BEP-20 universe can't be shorted, so downtrends map
-to cash, not to a short). Regime thresholds are transparent and tunable, not
-fitted to a single backtest. Past performance is not a guarantee. This is a
-research artifact — there is no execution layer here by design (that is Track 1's
-job).
+- Unknown asset: report that CMC identity resolution failed.
+- Tool failure: retry once, then mark the input missing.
+- Rate limit: report the limit; do not fill gaps with assumptions.
+- Stale evidence: emit `INSUFFICIENT_DATA`.
+- Conflicting evidence: preserve all values and let the deterministic priority
+  rules resolve them.
+
+## Validation
+
+The same strategy semantics run through `backtest/engine.py`. All candidate
+policies share next-bar execution, stop-first intrabar fills, mark-to-market
+equity, fees, sizing, and final liquidation. Generated results are in
+`docs/RESULTS.md`.

@@ -1,0 +1,19 @@
+{
+  "symbol": "BNB",
+  "cmc_id": 1839,
+  "as_of": "2026-06-20T10:00:00Z",
+  "observed_at": "2026-06-20T09:30:00Z",
+  "confirmation_count": 3,
+  "expected_hash": "21b3c31a41612de10c48b99ac194a805c37e1f6e88db5c9301af4a355c201141",
+  "signals": {
+    "fear_greed": 62.0,
+    "trend_score": 0.72,
+    "vol_state": "normal",
+    "funding_stress": 0.18
+  },
+  "sources": [
+    {"name": "get_crypto_technical_analysis", "observed_at": "2026-06-20T09:30:00Z"},
+    {"name": "get_global_metrics_latest", "observed_at": "2026-06-20T09:30:00Z"},
+    {"name": "get_global_crypto_derivatives_metrics", "observed_at": "2026-06-20T09:30:00Z"}
+  ]
+}

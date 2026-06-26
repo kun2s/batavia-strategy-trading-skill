@@ -1,113 +1,184 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Batavia regime-aware strategy spec",
-  "description": "A backtestable spec whose active rules adapt to a detected market regime. Engine-agnostic.",
+  "title": "Batavia v0.2 strategy receipt",
   "type": "object",
-  "required": ["name", "symbol", "timeframe", "regime", "active_strategy", "regime_playbook", "risk", "costs"],
+  "additionalProperties": false,
+  "required": ["name", "version", "as_of", "asset", "timeframe", "decision_status", "evidence", "agent_hub", "regime", "active_strategy", "regime_playbook", "invalidation_conditions", "costs", "validation", "alternatives_rejected"],
   "properties": {
-    "name": {"type": "string", "const": "batavia-regime-router"},
-    "version": {"type": "string"},
-    "as_of": {"type": ["string", "null"], "description": "ISO timestamp the regime was assessed"},
-    "symbol": {"type": "string", "description": "Token symbol, e.g. ETH"},
-    "timeframe": {"type": "string", "examples": ["1h"]},
-    "direction": {"type": "string", "enum": ["long_only", "long_short"]},
-
-    "regime": {
+    "name": {"const": "batavia-regime-compiler"},
+    "version": {"const": "0.2.0"},
+    "as_of": {"type": ["string", "null"], "format": "date-time"},
+    "asset": {
       "type": "object",
-      "required": ["label", "scores", "rationale"],
+      "additionalProperties": false,
+      "required": ["symbol", "cmc_id"],
       "properties": {
-        "label": {"type": "string", "enum": ["TRENDING_UP", "RANGING", "EUPHORIA", "RISK_OFF"]},
-        "scores": {
-          "type": "object",
-          "properties": {
-            "fear_greed": {"type": "number", "minimum": 0, "maximum": 100},
-            "trend_score": {"type": "number", "minimum": -1, "maximum": 1},
-            "vol_state": {"type": "string", "enum": ["low", "normal", "high"]},
-            "funding_stress": {"type": "number", "minimum": -1, "maximum": 1}
-          }
-        },
-        "rationale": {"type": "string", "description": "Plain-language why for this regime"}
+        "symbol": {"type": "string", "pattern": "^[A-Z0-9._-]+$"},
+        "cmc_id": {"type": ["integer", "null"], "minimum": 1}
       }
     },
-
+    "timeframe": {"const": "1h"},
+    "decision_status": {"enum": ["ACTIVE", "STAND_ASIDE", "INSUFFICIENT_DATA"]},
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quality", "observed_at", "stale", "missing_inputs", "sources", "hash_sha256"],
+      "properties": {
+        "quality": {"enum": ["complete", "incomplete", "stale"]},
+        "observed_at": {"type": ["string", "null"], "format": "date-time"},
+        "stale": {"type": "boolean"},
+        "missing_inputs": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "observed_at"],
+            "properties": {
+              "name": {"type": "string", "minLength": 1},
+              "observed_at": {"type": ["string", "null"], "format": "date-time"}
+            }
+          }
+        },
+        "hash_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "agent_hub": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["skill", "surfaces", "required_mcp_tools", "optional_research_tools", "provenance_contract", "x402_policy"],
+      "properties": {
+        "skill": {"const": "batavia-regime-compiler"},
+        "surfaces": {
+          "type": "array",
+          "items": {"enum": ["skill", "mcp", "cli_replay"]},
+          "uniqueItems": true,
+          "minItems": 1
+        },
+        "required_mcp_tools": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true,
+          "minItems": 1
+        },
+        "optional_research_tools": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "provenance_contract": {"type": "string", "minLength": 1},
+        "x402_policy": {"type": "string", "minLength": 1}
+      }
+    },
+    "regime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "confirmation_count", "required_confirmation_bars", "scores", "rationale"],
+      "properties": {
+        "label": {"enum": ["TRENDING_UP", "RANGING", "EUPHORIA", "RISK_OFF"]},
+        "confirmation_count": {"type": "integer", "minimum": 0},
+        "required_confirmation_bars": {"type": "integer", "minimum": 1},
+        "scores": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["fear_greed", "trend_score", "vol_state", "funding_stress"],
+          "properties": {
+            "fear_greed": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+            "trend_score": {"type": ["number", "null"], "minimum": -1, "maximum": 1},
+            "vol_state": {"type": ["string", "null"], "enum": ["low", "normal", "high", null]},
+            "funding_stress": {"type": ["number", "null"], "minimum": -1, "maximum": 1}
+          }
+        },
+        "rationale": {"type": "string"}
+      }
+    },
     "active_strategy": {"$ref": "#/$defs/substrategy"},
     "regime_playbook": {
       "type": "object",
-      "description": "The full season -> sub-strategy map; the active one is also surfaced at active_strategy.",
       "required": ["TRENDING_UP", "RANGING", "EUPHORIA", "RISK_OFF"],
-      "additionalProperties": {"$ref": "#/$defs/substrategy"}
-    },
-
-    "risk": {
-      "type": "object",
-      "description": "Portfolio-level guardrails (regime-independent)",
+      "additionalProperties": false,
       "properties": {
-        "drawdown_derisk_start": {"type": "number"},
-        "drawdown_halt": {"type": "number"},
-        "drawdown_resume": {"type": "number"},
-        "max_concurrent": {"type": "integer"},
-        "min_trades_per_day": {"type": "integer"}
+        "TRENDING_UP": {"$ref": "#/$defs/substrategy"},
+        "RANGING": {"$ref": "#/$defs/substrategy"},
+        "EUPHORIA": {"$ref": "#/$defs/substrategy"},
+        "RISK_OFF": {"$ref": "#/$defs/substrategy"}
       }
     },
+    "invalidation_conditions": {"type": "array", "items": {"type": "string"}},
     "costs": {
       "type": "object",
-      "required": ["fee_per_side_pct"],
-      "properties": {"fee_per_side_pct": {"type": "number"}}
+      "additionalProperties": false,
+      "required": ["fee_per_side_pct", "intrabar_conflict_policy"],
+      "properties": {
+        "fee_per_side_pct": {"const": 0.05},
+        "intrabar_conflict_policy": {"const": "stop_first"}
+      }
     },
-    "data_inputs": {"type": "array", "items": {"type": "string"},
-      "description": "CoinMarketCap Agent Hub endpoints/tools consumed"},
     "validation": {
       "type": "object",
-      "description": "How this spec is to be validated (framework + honest status; no baked results)",
+      "additionalProperties": false,
+      "required": ["method", "candidates", "selection_gate"],
       "properties": {
         "method": {"type": "string"},
-        "hypothesis": {"type": "string"},
-        "baselines": {"type": "array", "items": {"type": "string"}},
-        "status": {"type": "string"}
+        "candidates": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "selection_gate": {"type": "string"}
+      }
+    },
+    "alternatives_rejected": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["strategy", "reason"],
+        "properties": {"strategy": {"type": "string"}, "reason": {"type": "string"}}
       }
     }
   },
-
   "$defs": {
     "substrategy": {
       "type": "object",
-      "required": ["style", "entry", "exit", "sizing"],
+      "additionalProperties": false,
+      "required": ["style", "direction", "entry", "exit", "sizing"],
       "properties": {
-        "regime": {"type": "string"},
-        "style": {"type": "string", "enum": ["momentum", "mean_reversion", "defensive_no_new_risk", "cash"]},
-        "direction": {"type": "string", "enum": ["long_only", "long_short"]},
+        "regime": {"enum": ["TRENDING_UP", "RANGING", "EUPHORIA", "RISK_OFF"]},
+        "style": {"enum": ["momentum", "cash"]},
+        "direction": {"const": "long_only"},
         "entry": {
           "type": "object",
-          "required": ["on"],
+          "additionalProperties": false,
+          "required": ["on", "rule", "side", "execute"],
           "properties": {
-            "on": {"type": "string", "description": "trigger; 'none' = stand aside (a valid, intended output)"},
-            "rule": {"type": "string"},
-            "side": {"type": "string", "enum": ["long", "short", "flat"]}
+            "on": {"type": "string"}, "rule": {"type": "string"},
+            "side": {"enum": ["long", "flat"]}, "execute": {"enum": ["next_bar_open", "none"]}
           }
         },
         "exit": {
           "type": "object",
-          "required": ["stop_loss_pct", "take_profit_pct", "max_hold_hours"],
+          "additionalProperties": false,
+          "required": ["stop_loss_pct", "take_profit_pct", "max_hold_hours", "on", "execute_signal_exit"],
           "properties": {
-            "stop_loss_pct": {"type": "number"},
-            "take_profit_pct": {"type": "number"},
-            "max_hold_hours": {"type": "integer"},
-            "trail": {"type": "object"},
+            "stop_loss_pct": {"type": "number", "minimum": 0},
+            "take_profit_pct": {"type": "number", "minimum": 0},
+            "max_hold_hours": {"type": "integer", "minimum": 0},
             "on": {"type": "array", "items": {"type": "string"}},
-            "note": {"type": "string"}
+            "execute_signal_exit": {"const": "next_bar_open"}
           }
         },
         "sizing": {
           "type": "object",
-          "required": ["method"],
+          "additionalProperties": false,
+          "required": ["method", "max_position_fraction"],
           "properties": {
-            "method": {"type": "string", "enum": ["volatility_target", "fixed_fraction"]},
-            "base_risk": {"type": "number"},
-            "reference_atr_pct": {"type": "number"},
-            "min_risk": {"type": "number"},
-            "max_risk": {"type": "number"},
-            "max_position_fraction": {"type": "number"}
-          }
+            "method": {"enum": ["volatility_target", "fixed_fraction"]},
+            "base_position_fraction": {"type": "number", "minimum": 0, "maximum": 1},
+            "reference_atr_pct": {"type": "number", "exclusiveMinimum": 0},
+            "min_position_fraction": {"type": "number", "minimum": 0, "maximum": 1},
+            "max_position_fraction": {"type": "number", "minimum": 0, "maximum": 1}
+          },
+          "allOf": [{
+            "if": {"properties": {"method": {"const": "volatility_target"}}},
+            "then": {"required": ["base_position_fraction", "reference_atr_pct", "min_position_fraction"]}
+          }]
         }
       }
     }

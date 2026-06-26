@@ -2,7 +2,12 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+.testdeps/
+.env
+.env.*
+!.env.example
 .DS_Store
+__MACOSX/
 data/
 *.csv
 !examples/*.csv

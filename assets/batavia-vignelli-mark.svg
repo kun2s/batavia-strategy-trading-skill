@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 420" role="img" aria-labelledby="title desc">
+  <title id="title">Batavia mark</title>
+  <desc id="desc">A red and black geometric evidence-and-decision monogram.</desc>
+  <rect width="420" height="420" fill="#F7F7F2"/>
+
+  <g transform="translate(72 72)">
+    <rect x="0" y="0" width="276" height="276" fill="#D71920"/>
+    <rect x="36" y="36" width="54" height="204" fill="#111111"/>
+    <rect x="90" y="36" width="112" height="54" fill="#F7F7F2"/>
+    <rect x="90" y="111" width="150" height="54" fill="#F7F7F2"/>
+    <rect x="90" y="186" width="112" height="54" fill="#F7F7F2"/>
+    <path d="M196 111h44l36 27-36 27h-44l36-27-36-27Z" fill="#111111"/>
+  </g>
+</svg>

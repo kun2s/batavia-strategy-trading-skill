@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Batavia Product Promo</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #f7f4ed;
+        color: #11263d;
+        font-family: "IBM Plex Sans Condensed", "Arial Narrow", Arial, sans-serif;
+      }
+
+      [data-composition-id="main"] {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #f7f4ed;
+      }
+
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #f7f4ed;
+      }
+
+      #scene1 {
+        z-index: 1;
+      }
+
+      #scene2,
+      #scene3,
+      #scene4,
+      #scene5,
+      #scene6 {
+        z-index: 2;
+        opacity: 0;
+      }
+
+      .scene-content {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        padding: 94px 116px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .rule-top,
+      .rule-bottom,
+      .rule-left {
+        position: absolute;
+        z-index: 1;
+        background: #d9d2c4;
+      }
+
+      .rule-top {
+        top: 74px;
+        left: 116px;
+        width: 1360px;
+        height: 2px;
+      }
+
+      .rule-bottom {
+        bottom: 76px;
+        left: 116px;
+        width: 1688px;
+        height: 2px;
+      }
+
+      .rule-left {
+        top: 76px;
+        left: 90px;
+        width: 2px;
+        height: 928px;
+      }
+
+      .ghost {
+        position: absolute;
+        z-index: 0;
+        right: -70px;
+        bottom: -120px;
+        font-size: 300px;
+        font-weight: 900;
+        letter-spacing: 0.02em;
+        color: rgba(17, 38, 61, 0.055);
+        line-height: 0.86;
+        white-space: nowrap;
+        pointer-events: none;
+      }
+
+      .logo {
+        width: 308px;
+        height: auto;
+      }
+
+      .eyebrow {
+        font-family: "IBM Plex Mono", "Courier New", monospace;
+        font-size: 25px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #d71920;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .kicker {
+        font-family: "IBM Plex Mono", "Courier New", monospace;
+        font-size: 23px;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: #d99a2b;
+      }
+
+      h1,
+      h2 {
+        margin: 0;
+        color: #11263d;
+        font-weight: 900;
+        letter-spacing: 0.01em;
+      }
+
+      h1 {
+        max-width: 1240px;
+        font-size: 138px;
+        line-height: 0.9;
+      }
+
+      h2 {
+        max-width: 1190px;
+        font-size: 112px;
+        line-height: 0.93;
+      }
+
+      p {
+        margin: 0;
+        max-width: 820px;
+        font-size: 38px;
+        line-height: 1.2;
+        font-weight: 360;
+        color: #23394e;
+      }
+
+      .hero-layout {
+        justify-content: space-between;
+      }
+
+      .hero-main {
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+      }
+
+      .hero-bottom {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 64px;
+      }
+
+      .stamp {
+        border: 5px solid #d71920;
+        color: #d71920;
+        padding: 18px 28px 20px;
+        font-family: "IBM Plex Mono", "Courier New", monospace;
+        font-size: 34px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        transform: rotate(-2deg);
+      }
+
+      .split {
+        flex-direction: row;
+        align-items: stretch;
+        gap: 84px;
+      }
+
+      .copy-col {
+        width: 770px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 34px;
+      }
+
+      .receipt {
+        flex: 1;
+        margin: 44px 0;
+        padding: 48px;
+        box-sizing: border-box;
+        background: #fffaf0;
+        border: 3px solid #11263d;
+        box-shadow: 18px 18px 0 #d99a2b;
+        display: flex;
+        flex-direction: column;
+        gap: 26px;
+      }
+
+      .receipt-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding-bottom: 20px;
+        border-bottom: 3px solid #11263d;
+      }
+
+      .receipt-title strong {
+        font-size: 38px;
+        line-height: 1;
+        letter-spacing: 0.04em;
+      }
+
+      .receipt-title span {
+        font-family: "IBM Plex Mono", "Courier New", monospace;
+        font-size: 22px;
+        font-weight: 700;
+        color: #d71920;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 248px 1fr;
+        align-items: center;
+        gap: 30px;
+        font-family: "IBM Plex Mono", "Courier New", monospace;
+        font-size: 29px;
+        line-height: 1.18;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .row .label {
+        color: #6f6658;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 21px;
+        font-weight: 700;
+      }
+
+      .row .value {
+        color: #11263d;
+        font-weight: 800;
+      }
+
+      .pipeline {
+        margin-top: 54px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 24px;
+      }
+
+      .pipe-card {
+        min-height: 230px;
+        padding: 32px 26px;
+        box-sizing: border-box;
+        border: 3px solid #11263d;
+        background: #fffaf0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .pipe-card .num {
+        font-family: "IBM Plex Mono", "Courier New", monospace;
+        font-size: 25px;
+        font-weight: 800;
+        color: #d71920;
+      }
+
+      .pipe-card strong {
+        font-size: 42px;
+        line-height: 0.98;
+        font-weight: 900;
+      }
+
+      .pipe-card span {
+        font-family: "IBM Plex Mono", "Courier New", monospace;
+        font-size: 20px;
+        line-height: 1.25;
+        color: #4a5c6d;
+      }
+
+      .decision-layout {
+        justify-content: center;
+        gap: 48px;
+      }
+
+      .decision-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
+      }
+
+      .decision {
+        min-height: 360px;
+        padding: 38px;
+        border: 4px solid #11263d;
+        background: #fffaf0;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .decision .status {
+        font-size: 58px;
+        line-height: 0.92;
+        font-weight: 900;
+        letter-spacing: 0.02em;
+      }
+
+      .decision .detail {
+        max-width: 430px;
+        font-size: 30px;
+        line-height: 1.15;
+        color: #24394d;
+      }
+
+      .decision.active {
+        box-shadow: 14px 14px 0 #d99a2b;
+      }
+
+      .decision.aside {
+        box-shadow: 14px 14px 0 #11263d;
+      }
+
+      .decision.insufficient {
+        box-shadow: 14px 14px 0 #d71920;
+      }
+
+      .contract-wrap {
+        display: grid;
+        grid-template-columns: 0.95fr 1.05fr;
+        gap: 72px;
+        align-items: center;
+        height: 100%;
+      }
+
+      .contract-points {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+
+      .contract-point {
+        display: grid;
+        grid-template-columns: 82px 1fr;
+        align-items: center;
+        gap: 22px;
+        font-size: 40px;
+        font-weight: 800;
+        line-height: 1.05;
+      }
+
+      .contract-point span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 68px;
+        height: 68px;
+        background: #d71920;
+        color: #f7f4ed;
+        font-family: "IBM Plex Mono", "Courier New", monospace;
+        font-size: 24px;
+        font-weight: 800;
+      }
+
+      .hash-panel {
+        padding: 54px;
+        border: 3px solid #11263d;
+        background: #11263d;
+        color: #f7f4ed;
+        box-shadow: 18px 18px 0 #d71920;
+      }
+
+      .hash-panel .label {
+        font-family: "IBM Plex Mono", "Courier New", monospace;
+        font-size: 24px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #d99a2b;
+      }
+
+      .hash {
+        margin-top: 30px;
+        font-family: "IBM Plex Mono", "Courier New", monospace;
+        font-size: 39px;
+        line-height: 1.18;
+        letter-spacing: 0.02em;
+        word-break: break-all;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .close {
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 34px;
+      }
+
+      .close .logo {
+        width: 430px;
+      }
+
+      .close h2 {
+        max-width: 1180px;
+      }
+
+      .close p {
+        max-width: 900px;
+        font-size: 36px;
+      }
+
+      .wipe {
+        position: absolute;
+        z-index: 30;
+        top: 0;
+        left: 0;
+        width: 1920px;
+        height: 1080px;
+        transform: translateX(-1920px);
+        pointer-events: none;
+      }
+
+      #wipe-a {
+        background: #11263d;
+      }
+
+      #wipe-b {
+        background: #d99a2b;
+      }
+
+      .red-block {
+        position: absolute;
+        right: 116px;
+        top: 74px;
+        width: 210px;
+        height: 18px;
+        background: #d71920;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-width="1920"
+      data-height="1080"
+      data-start="0"
+      data-duration="28"
+      data-track-index="0"
+    >
+      <section id="scene1" class="scene">
+        <div class="rule-top"></div>
+        <div class="rule-bottom"></div>
+        <div class="rule-left"></div>
+        <div class="ghost">RECEIPT</div>
+        <div class="red-block"></div>
+        <div class="scene-content hero-layout">
+          <img class="logo s1-el" src="../../assets/batavia-vignelli-logo.png" alt="Batavia" />
+          <div class="hero-main">
+            <div class="eyebrow s1-el">CoinMarketCap Agent Hub Strategy Skill</div>
+            <h1 class="s1-el">Evidence in. Auditable strategy receipt out.</h1>
+          </div>
+          <div class="hero-bottom">
+            <p class="s1-el">A deterministic control layer before any crypto trading agent touches risk.</p>
+            <div class="stamp s1-el">wallet-free</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="scene2" class="scene">
+        <div class="rule-top"></div>
+        <div class="rule-bottom"></div>
+        <div class="ghost">NO PROSE</div>
+        <div class="scene-content split">
+          <div class="copy-col">
+            <div class="kicker s2-el">The problem</div>
+            <h2 class="s2-el">Agents are fast. Their reasoning is hard to audit.</h2>
+            <p class="s2-el">Batavia refuses the vague market take. It compiles data into a strict receipt another system can inspect.</p>
+          </div>
+          <div class="receipt s2-el">
+            <div class="receipt-title">
+              <strong>strategy_receipt.v0.2</strong>
+              <span>schema valid</span>
+            </div>
+            <div class="row">
+              <div class="label">asset</div>
+              <div class="value">BNB / CMC ID 1839</div>
+            </div>
+            <div class="row">
+              <div class="label">freshness</div>
+              <div class="value">observed_at 09:30Z / stale false</div>
+            </div>
+            <div class="row">
+              <div class="label">regime</div>
+              <div class="value">TRENDING_UP / confirmation 3</div>
+            </div>
+            <div class="row">
+              <div class="label">decision</div>
+              <div class="value">ACTIVE momentum, next bar open</div>
+            </div>
+            <div class="row">
+              <div class="label">invalidates</div>
+              <div class="value">risk-off, euphoria, stale evidence</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="scene3" class="scene">
+        <div class="rule-top"></div>
+        <div class="rule-bottom"></div>
+        <div class="ghost">CMC</div>
+        <div class="scene-content">
+          <div class="kicker s3-el">How it works</div>
+          <h2 class="s3-el">CMC evidence becomes a replayable contract.</h2>
+          <div class="pipeline">
+            <div class="pipe-card s3-el">
+              <div class="num">01</div>
+              <strong>Resolve asset</strong>
+              <span>search_cryptos + quotes latest</span>
+            </div>
+            <div class="pipe-card s3-el">
+              <div class="num">02</div>
+              <strong>Normalize signals</strong>
+              <span>technicals, global metrics, derivatives</span>
+            </div>
+            <div class="pipe-card s3-el">
+              <div class="num">03</div>
+              <strong>Gate evidence</strong>
+              <span>freshness, completeness, timestamps</span>
+            </div>
+            <div class="pipe-card s3-el">
+              <div class="num">04</div>
+              <strong>Compile receipt</strong>
+              <span>schema, hash, invalidation rules</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="scene4" class="scene">
+        <div class="rule-top"></div>
+        <div class="rule-bottom"></div>
+        <div class="ghost">DECIDE</div>
+        <div class="scene-content decision-layout">
+          <div class="kicker s4-el">Three honest outcomes</div>
+          <h2 class="s4-el">Not every market snapshot deserves a trade.</h2>
+          <div class="decision-grid">
+            <div class="decision active s4-el">
+              <div class="eyebrow">fresh uptrend</div>
+              <div class="status">ACTIVE</div>
+              <p class="detail">Momentum receipt with sizing, stop, target, and max hold.</p>
+            </div>
+            <div class="decision aside s4-el">
+              <div class="eyebrow">extreme fear</div>
+              <div class="status">STAND_ASIDE</div>
+              <p class="detail">Risk-off cash receipt. Preserve optionality.</p>
+            </div>
+            <div class="decision insufficient s4-el">
+              <div class="eyebrow">stale data</div>
+              <div class="status">INSUFFICIENT_DATA</div>
+              <p class="detail">Refuse to decide when evidence is incomplete.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="scene5" class="scene">
+        <div class="rule-top"></div>
+        <div class="rule-bottom"></div>
+        <div class="ghost">AUDIT</div>
+        <div class="scene-content">
+          <div class="contract-wrap">
+            <div>
+              <div class="kicker s5-el">Why it matters</div>
+              <h2 class="s5-el">A clean boundary between evidence, decision, and action.</h2>
+              <div class="contract-points">
+                <div class="contract-point s5-el"><span>1</span>CMC tool provenance recorded</div>
+                <div class="contract-point s5-el"><span>2</span>Alternatives rejected explicitly</div>
+                <div class="contract-point s5-el"><span>3</span>Same receipt can be replayed and tested</div>
+              </div>
+            </div>
+            <div class="hash-panel s5-el">
+              <div class="label">evidence hash</div>
+              <div class="hash">21b3c31a41612de10c48b99ac194a805c37e1f6e88db5c9301af4a355c201141</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="scene6" class="scene">
+        <div class="rule-top"></div>
+        <div class="rule-bottom"></div>
+        <div class="scene-content close">
+          <img class="logo s6-el" src="../../assets/batavia-vignelli-logo.png" alt="Batavia" />
+          <div class="kicker s6-el">Research boundary. No wallet. No signing.</div>
+          <h2 class="s6-el">Autonomous trading should begin with a verifiable receipt.</h2>
+          <p class="s6-el">Batavia: CoinMarketCap evidence in. Auditable strategy receipt out.</p>
+        </div>
+      </section>
+
+      <div id="wipe-a" class="wipe"></div>
+      <div id="wipe-b" class="wipe"></div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+
+      var tl = gsap.timeline({ paused: true });
+      var sceneW = 1920;
+      var loopRepeat = Math.ceil(28 / 5) - 1;
+
+      function enter(selector, t) {
+        tl.from(selector + " .kicker", { y: 34, opacity: 0, duration: 0.45, ease: "power2.out" }, t + 0.12);
+        tl.from(selector + " h2", { x: -58, opacity: 0, duration: 0.62, ease: "expo.out" }, t + 0.28);
+      }
+
+      function push(oldScene, newScene, t) {
+        tl.to(oldScene, { x: -sceneW, duration: 0.46, ease: "power3.inOut" }, t);
+        tl.fromTo(newScene, { x: sceneW, opacity: 1 }, { x: 0, duration: 0.46, ease: "power3.inOut" }, t);
+      }
+
+      function blockWipe(oldScene, newScene, t) {
+        tl.set("#wipe-a", { x: -sceneW }, t - 0.01);
+        tl.set("#wipe-b", { x: -sceneW }, t - 0.01);
+        tl.to("#wipe-a", { x: 0, duration: 0.25, ease: "power3.inOut" }, t);
+        tl.to("#wipe-b", { x: 0, duration: 0.25, ease: "power3.inOut" }, t + 0.06);
+        tl.set(oldScene, { opacity: 0 }, t + 0.2);
+        tl.set(newScene, { opacity: 1, x: 0 }, t + 0.2);
+        tl.to("#wipe-a", { x: sceneW, duration: 0.25, ease: "power3.inOut" }, t + 0.28);
+        tl.to("#wipe-b", { x: sceneW, duration: 0.25, ease: "power3.inOut" }, t + 0.34);
+      }
+
+      tl.from("#scene1 .logo", { y: -32, opacity: 0, duration: 0.5, ease: "power2.out" }, 0.18);
+      tl.from("#scene1 .eyebrow", { x: -48, opacity: 0, duration: 0.48, ease: "circ.out" }, 0.38);
+      tl.from("#scene1 h1", { y: 62, opacity: 0, duration: 0.7, ease: "expo.out" }, 0.58);
+      tl.from("#scene1 p", { y: 42, opacity: 0, duration: 0.5, ease: "power3.out" }, 1.0);
+      tl.from("#scene1 .stamp", { rotation: -9, scale: 0.82, opacity: 0, duration: 0.45, ease: "back.out(1.8)" }, 1.15);
+
+      push("#scene1", "#scene2", 4.2);
+      enter("#scene2", 4.72);
+      tl.from("#scene2 p", { y: 30, opacity: 0, duration: 0.5, ease: "power3.out" }, 5.22);
+      tl.from("#scene2 .receipt", { x: 70, rotation: 1.6, opacity: 0, duration: 0.62, ease: "back.out(1.4)" }, 5.05);
+      tl.from("#scene2 .row", { x: 34, opacity: 0, duration: 0.34, stagger: 0.08, ease: "power2.out" }, 5.46);
+
+      push("#scene2", "#scene3", 9.2);
+      enter("#scene3", 9.72);
+      tl.from("#scene3 .pipe-card", { y: 52, opacity: 0, rotation: -1.5, duration: 0.56, stagger: 0.12, ease: "back.out(1.35)" }, 10.45);
+      tl.from("#scene3 .pipe-card .num", { scale: 0.55, opacity: 0, duration: 0.36, stagger: 0.12, ease: "circ.out" }, 10.56);
+
+      blockWipe("#scene3", "#scene4", 14.0);
+      enter("#scene4", 14.62);
+      tl.from("#scene4 .decision", { y: 64, opacity: 0, scale: 0.95, duration: 0.58, stagger: 0.14, ease: "power4.out" }, 15.22);
+      tl.from("#scene4 .decision .status", { x: -28, opacity: 0, duration: 0.38, stagger: 0.14, ease: "expo.out" }, 15.46);
+      tl.from("#scene4 .decision .detail", { y: 22, opacity: 0, duration: 0.36, stagger: 0.14, ease: "sine.out" }, 15.68);
+
+      push("#scene4", "#scene5", 19.2);
+      enter("#scene5", 19.72);
+      tl.from("#scene5 .contract-point", { x: -42, opacity: 0, duration: 0.45, stagger: 0.12, ease: "power2.out" }, 20.58);
+      tl.from("#scene5 .hash-panel", { x: 74, opacity: 0, duration: 0.6, ease: "back.out(1.25)" }, 20.68);
+      tl.from("#scene5 .hash", { opacity: 0, y: 18, duration: 0.42, ease: "power3.out" }, 21.08);
+
+      push("#scene5", "#scene6", 23.8);
+      tl.from("#scene6 .logo", { y: -36, opacity: 0, duration: 0.5, ease: "power2.out" }, 24.38);
+      tl.from("#scene6 .kicker", { y: 28, opacity: 0, duration: 0.44, ease: "circ.out" }, 24.62);
+      tl.from("#scene6 h2", { scale: 0.96, opacity: 0, duration: 0.62, ease: "expo.out" }, 24.86);
+      tl.from("#scene6 p", { y: 28, opacity: 0, duration: 0.48, ease: "power3.out" }, 25.28);
+      tl.to("#scene6 .s6-el", { opacity: 0, y: -18, duration: 0.7, stagger: 0.05, ease: "sine.in" }, 27.0);
+
+      tl.to(".ghost", { x: -22, y: 12, duration: 5, repeat: loopRepeat, yoyo: true, ease: "sine.inOut" }, 0.2);
+      tl.from(".rule-top, .rule-bottom", { scaleX: 0, transformOrigin: "left center", duration: 0.7, ease: "power2.out" }, 0.12);
+      tl.from(".rule-left", { scaleY: 0, transformOrigin: "top center", duration: 0.7, ease: "power2.out" }, 0.18);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

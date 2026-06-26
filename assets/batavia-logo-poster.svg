@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Batavia poster logo</title>
+  <desc id="desc">A bold typographic Batavia logo with three evidence bands and an amber decision arrow.</desc>
+  <rect width="1024" height="1024" fill="#F2EBDD"/>
+
+  <!-- Oversized type and asymmetric rules give the mark an editorial poster rhythm. -->
+  <path d="M0 0h138v1024H0z" fill="#D99A2B"/>
+  <path d="M92 0h46v1024H92z" fill="#11263D"/>
+
+  <text x="176" y="430" fill="#11263D"
+        font-family="Arial Black, Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="274" font-weight="900" letter-spacing="-22">BATA</text>
+  <text x="170" y="716" fill="#11263D"
+        font-family="Arial Black, Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="300" font-weight="900" letter-spacing="-24">VIA</text>
+
+  <path d="M176 784h472v24H176zM176 834h500v24H176zM176 884h402v24H176z" fill="#11263D"/>
+  <path d="m578 872 116 24-116 24 28-24-28-24Z" fill="#D99A2B"/>
+
+  <text x="720" y="807" fill="#11263D"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="25" font-weight="700" letter-spacing="3">EVIDENCE</text>
+  <text x="720" y="907" fill="#11263D"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="25" font-weight="700" letter-spacing="3">DECISION</text>
+</svg>

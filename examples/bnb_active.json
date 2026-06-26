@@ -1,0 +1,218 @@
+{
+  "active_strategy": {
+    "direction": "long_only",
+    "entry": {
+      "execute": "next_bar_open",
+      "on": "fresh_close_cross_above_ema20",
+      "rule": "previous close <= EMA20 and latest close > EMA20 after 3 confirmed TRENDING_UP bars",
+      "side": "long"
+    },
+    "exit": {
+      "execute_signal_exit": "next_bar_open",
+      "max_hold_hours": 72,
+      "on": [
+        "confirmed_regime_not_trending_up"
+      ],
+      "stop_loss_pct": 0.025,
+      "take_profit_pct": 0.08
+    },
+    "regime": "TRENDING_UP",
+    "sizing": {
+      "base_position_fraction": 0.15,
+      "max_position_fraction": 0.25,
+      "method": "volatility_target",
+      "min_position_fraction": 0.05,
+      "reference_atr_pct": 0.02
+    },
+    "style": "momentum"
+  },
+  "agent_hub": {
+    "optional_research_tools": [
+      "get_crypto_ohlcv_historical",
+      "get_fear_and_greed_historical"
+    ],
+    "provenance_contract": "Every receipt records the CMC tool names, observation timestamps, freshness gate, and evidence hash used for the decision.",
+    "required_mcp_tools": [
+      "search_cryptos",
+      "get_crypto_quotes_latest",
+      "get_crypto_technical_analysis",
+      "get_global_metrics_latest",
+      "get_global_crypto_derivatives_metrics"
+    ],
+    "skill": "batavia-regime-compiler",
+    "surfaces": [
+      "skill",
+      "mcp",
+      "cli_replay"
+    ],
+    "x402_policy": "No paid call is required for the offline demo; live Agent Hub runs may use x402-enabled CMC tool access without changing the receipt schema."
+  },
+  "alternatives_rejected": [
+    {
+      "reason": "Market is not classified as ranging.",
+      "strategy": "mean_reversion"
+    }
+  ],
+  "as_of": "2026-06-20T10:00:00Z",
+  "asset": {
+    "cmc_id": 1839,
+    "symbol": "BNB"
+  },
+  "costs": {
+    "fee_per_side_pct": 0.05,
+    "intrabar_conflict_policy": "stop_first"
+  },
+  "decision_status": "ACTIVE",
+  "evidence": {
+    "hash_sha256": "21b3c31a41612de10c48b99ac194a805c37e1f6e88db5c9301af4a355c201141",
+    "missing_inputs": [],
+    "observed_at": "2026-06-20T09:30:00Z",
+    "quality": "complete",
+    "sources": [
+      {
+        "name": "get_crypto_technical_analysis",
+        "observed_at": "2026-06-20T09:30:00Z"
+      },
+      {
+        "name": "get_global_metrics_latest",
+        "observed_at": "2026-06-20T09:30:00Z"
+      },
+      {
+        "name": "get_global_crypto_derivatives_metrics",
+        "observed_at": "2026-06-20T09:30:00Z"
+      }
+    ],
+    "stale": false
+  },
+  "invalidation_conditions": [
+    "confirmed regime is no longer TRENDING_UP",
+    "Fear & Greed is at or below 20",
+    "Fear & Greed is at or above 80 while funding_stress is at or above 0.5",
+    "required evidence is older than 2 hours"
+  ],
+  "name": "batavia-regime-compiler",
+  "regime": {
+    "confirmation_count": 3,
+    "label": "TRENDING_UP",
+    "rationale": "Trend score +0.72 supports long momentum, subject to confirmation.",
+    "required_confirmation_bars": 3,
+    "scores": {
+      "fear_greed": 62.0,
+      "funding_stress": 0.18,
+      "trend_score": 0.72,
+      "vol_state": "normal"
+    }
+  },
+  "regime_playbook": {
+    "EUPHORIA": {
+      "direction": "long_only",
+      "entry": {
+        "execute": "none",
+        "on": "none",
+        "rule": "Extreme greed and crowded funding invalidate new long risk.",
+        "side": "flat"
+      },
+      "exit": {
+        "execute_signal_exit": "next_bar_open",
+        "max_hold_hours": 0,
+        "on": [
+          "exit_existing_position_at_next_bar_open"
+        ],
+        "stop_loss_pct": 0.0,
+        "take_profit_pct": 0.0
+      },
+      "sizing": {
+        "max_position_fraction": 0.0,
+        "method": "fixed_fraction"
+      },
+      "style": "cash"
+    },
+    "RANGING": {
+      "direction": "long_only",
+      "entry": {
+        "execute": "none",
+        "on": "none",
+        "rule": "No confirmed directional edge; preserve optionality in cash.",
+        "side": "flat"
+      },
+      "exit": {
+        "execute_signal_exit": "next_bar_open",
+        "max_hold_hours": 0,
+        "on": [
+          "exit_existing_position_at_next_bar_open"
+        ],
+        "stop_loss_pct": 0.0,
+        "take_profit_pct": 0.0
+      },
+      "sizing": {
+        "max_position_fraction": 0.0,
+        "method": "fixed_fraction"
+      },
+      "style": "cash"
+    },
+    "RISK_OFF": {
+      "direction": "long_only",
+      "entry": {
+        "execute": "none",
+        "on": "none",
+        "rule": "Fear or a confirmed downtrend invalidates long-only participation.",
+        "side": "flat"
+      },
+      "exit": {
+        "execute_signal_exit": "next_bar_open",
+        "max_hold_hours": 0,
+        "on": [
+          "exit_existing_position_at_next_bar_open"
+        ],
+        "stop_loss_pct": 0.0,
+        "take_profit_pct": 0.0
+      },
+      "sizing": {
+        "max_position_fraction": 0.0,
+        "method": "fixed_fraction"
+      },
+      "style": "cash"
+    },
+    "TRENDING_UP": {
+      "direction": "long_only",
+      "entry": {
+        "execute": "next_bar_open",
+        "on": "fresh_close_cross_above_ema20",
+        "rule": "previous close <= EMA20 and latest close > EMA20 after 3 confirmed TRENDING_UP bars",
+        "side": "long"
+      },
+      "exit": {
+        "execute_signal_exit": "next_bar_open",
+        "max_hold_hours": 72,
+        "on": [
+          "confirmed_regime_not_trending_up"
+        ],
+        "stop_loss_pct": 0.025,
+        "take_profit_pct": 0.08
+      },
+      "sizing": {
+        "base_position_fraction": 0.15,
+        "max_position_fraction": 0.25,
+        "method": "volatility_target",
+        "min_position_fraction": 0.05,
+        "reference_atr_pct": 0.02
+      },
+      "style": "momentum"
+    }
+  },
+  "timeframe": "1h",
+  "validation": {
+    "candidates": [
+      "router",
+      "trend_cash",
+      "sentiment_momentum",
+      "momentum",
+      "mean_reversion",
+      "buy_hold",
+      "cash"
+    ],
+    "method": "Three chronological windows; active strategies share fills, sizing, fees, stops, targets, and max hold.",
+    "selection_gate": "Positive median window return and profitable on at least 4 of 7 assets."
+  },
+  "version": "0.2.0"
+}
